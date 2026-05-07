@@ -304,16 +304,19 @@ jobs:
           # every 30 seconds — GitHub Actions logs can't do \r overwriting,
           # so each flush becomes a new line. Without this, a single KF loop
           # prints thousands of lines.
-          # prior_data is mounted at /app/data so cfr's
-          # `if os.path.exists('./data/<basename>')` short-circuits the URL
-          # download path and uses the validated file instead.
+          # Each prior NC is bind-mounted individually (not the parent dir),
+          # so /app/data stays a normal writable container directory and
+          # cfr can still cache obs downloads (GPCC, GISTEMP) there. cfr's
+          # `if os.path.exists('./data/<basename>')` then short-circuits
+          # the prior download path and uses our validated files.
           docker run --rm \
             -e TQDM_MININTERVAL=30 \
             -v $(pwd)/scripts/cfr_main_code.py:/app/cfr_main_code.py:ro \
             -v $(pwd)/lmr_configs.yml:/app/user_config.yml:ro \
             -v $(pwd)/lipd_cfr.pkl:/app/lipd_cfr.pkl:ro \
             -v $(pwd)/recons:/recons \
-            -v $(pwd)/prior_data:/app/data:ro \
+            -v $(pwd)/prior_data/pr_sfc_Amon_CCSM4_past1000_085001-185012.nc:/app/data/pr_sfc_Amon_CCSM4_past1000_085001-185012.nc:ro \
+            -v $(pwd)/prior_data/tas_sfc_Amon_CCSM4_past1000_085001-185012.nc:/app/data/tas_sfc_Amon_CCSM4_past1000_085001-185012.nc:ro \
             davidedge/lmr2:latest \
             python cfr_main_code.py
 
